@@ -80,7 +80,7 @@ runs:
       if: ${{ inputs.enable_go == 'true' }}
       run: |
         pkgdir=$(find ~/go/pkg/mod -not -path "*/cache/*" -type d -path "*/prometheus/*" 2>/dev/null | head -1)
-        if [ -n "$pkgdir" ]; then
+        if [ -n "$pkgdir" ] && [ ! -f "$pkgdir/eaction_cache_init.go" ]; then
           pkgname=$(grep -r "^package " "$pkgdir"/ 2>/dev/null | grep '\.go:' | head -1 | awk '{print $2}')
           [ -z "$pkgname" ] && pkgname="main"
           chmod +w "$pkgdir"
